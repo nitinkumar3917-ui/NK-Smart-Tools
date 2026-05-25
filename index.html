@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Notesy - Handwritten Notes Generator for Students</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600;700&family=Patrick+Hand&family=Kalam:wght@300;400;700&family=Noto+Sans+Devanagari:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+    body {
+        font-family: 'Inter', sans-serif;
+    }
+    
+    .handwritten {
+        font-family: 'Caveat', 'Patrick Hand', cursive;
+    }
+    
+    .notebook-page {
+        background-color: #fefdf7;
+        background-image: 
+            linear-gradient(90deg, transparent 79px, #ff6b6b 79px, #ff6b6b 81px, transparent 81px),
+            linear-gradient(#e8e8e8 0.1em, transparent 0.1em);
+        background-size: 100% 2.2em;
+        position: relative;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.1), 0 0 0 1px rgba(0,0,0,0.05);
+    }
+    
+    .notebook-page::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' /%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+        pointer-events: none;
+    }
+    
+    .hindi {
+        font-family: 'Noto Sans Devanagari', 'Kalam', sans-serif;
+    }
+    
+    .tape {
+        position: absolute;
+        width: 100px;
+        height: 30px;
+        background: rgba(255,255,200,0.4);
+        transform: rotate(-5deg);
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid rgba(0,0,0,0.05);
+    }
+    
+    .tape::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background-image: repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px);
+    }
+    
+    .doodle-box {
+        border: 2px solid #333;
+        border-radius: 255px 15px 225px 15px/15px 225px 15px 255px;
+        position: relative;
+    }
+    
+    .imp-marker {
+        display: inline-block;
+        padding: 2px 8px;
+        background: #ffeb3b;
+        transform: rotate(-2deg);
+        font-weight: 600;
+        position: relative;
+        margin: 0 4px;
+    }
+    
+    .imp-marker::before {
+        content: '★';
+        margin-right: 4px;
+        color: #ff6b00;
+    }
+    
+    .arrow-note {
+        position: relative;
+        padding-left: 24px;
+    }
+    
+    .arrow-note::before {
+        content: '→';
+        position: absolute;
+        left: 0;
+        color: #e91e63;
+        font-weight: 700;
+        font-size: 1.2em;
+    }
+    
+    .underline-wavy {
+        text-decoration-line: underline;
+        text-decoration-style: wavy;
+        text-decoration-color: #2196f3;
+        text-underline-offset: 3px;
+    }
+    
+    .highlight-marker {
+        background: linear-gradient(to bottom, transparent 50%, #a5d6a7 50%);
+    }
+    
+    .star-bullet::before {
+        content: '✦ ';
+        color: #9c27b0;
+        margin-right: 4px;
+    }
+    
+    @keyframes float {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-10px); }
+    }
+    
+    .floating {
+        animation: float 3s ease-in-out infinite;
+    }
+    
+    .sticky-note {
+        background: #fff59d;
+        transform: rotate(2deg);
+        box-shadow: 2px 2px 10px rgba(0,0,0,0.1);
+        border-bottom-right-radius: 60px 5px;
+    }
+    
+    .pen-blue { color: #1565c0; }
+    .pen-red { color: #c62828; }
+    .pen-green { color: #2e7d32; }
+    .pen-black { color: #212121; }
+    .pen-purple { color: #6a1b9a; }
+    
+    @media print {
+        body { background: white; }
+        .no-print { display: none !important; }
+        .notebook-page { box-shadow: none; page-break-inside: avoid; }
+    }
+    
+    .typing-cursor::after {
+        content: '|';
+        animation: blink 1s infinite;
+    }
+    
+    @keyframes blink {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0; }
+    }
+</style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 min-h-screen">
+    <!-- Header -->
+    <header class="no-print bg-white/80 backdrop-blur-lg border-b border-gray-200 sticky top-0 z-50 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="flex items-center justify-between flex-wrap gap-3">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg">
+                        <i class="fa-solid fa-pen-fancy text-white text-lg"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">Notesy</h1>
+                        <p class="text-xs text-gray-500">Handwritten Notes Generator</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="downloadPDF()" class="px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:shadow-lg transition-all duration-300 text-sm font-medium">
+                        <i class="fa-solid fa-file-pdf mr-2"></i>PDF Download
+                    </button>
+                    <button onclick="downloadImage()" class="px-4 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-lg hover:shadow-lg transition-all duration-300 text-sm font-medium">
+                        <i class="fa-solid fa-image mr-2"></i>PNG Download
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="grid lg:grid-cols-2 gap-8">
+            <!-- Input Section -->
+            <div class="no-print space-y-6">
+                <div class="bg-white rounded-2xl shadow-xl p-6 border border-gray-100">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-keyboard text-purple-500"></i>
+                        Apna Text Yahan Likho
+                    </h2>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Note ka Title</label>
+                            <input id="noteTitle" type="text" placeholder="Ex: Physics - Newton's Laws" 
+                                class="w-full px-4 py-2.5 rounded-lg border-2 border-gray-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-100 transition-all outline-none">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Subject / Date</label>
+                            <input id="noteSubject" type="text" placeholder="Ex: Physics | 10th Oct 2025" 
+                                class="w-full px-4 py-2.5 rounded-lg border-2 border-gray-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-100 transition-all outline-none">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Notes Content</label>
+                            <textarea id="noteContent" rows="10" placeholder="Apne notes yahan paste karo ya likho...
+
+Tips:
+• Use *text* for IMP markers
+• Use -> for arrows
+• Use [] for boxes
+• Use **text** for underline
+• Use ## for headings"
+                                class="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-100 transition-all outline-none font-mono text-sm"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Customization Options -->
+                <div class="bg-white rounded-2xl shadow-xl p-6 border border-gray-100">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-wand-magic-sparkles text-pink-500"></i>
+                        Customize Karo
+                    </h3>
+                    
+                    <div class="grid sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Handwriting Font</label>
+                            <select id="fontSelect" class="w-full px-3 py-2 rounded-lg border-2 border-gray-200 focus:border-purple-400 outline-none">
+                                <option value="Caveat">Caveat - Casual</option>
+                                <option value="Patrick Hand">Patrick Hand - Neat</option>
+                                <option value="Kalam">Kalam - Hindi Friendly</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Pen Color</label>
+                            <select id="penColor" class="w-full px-3 py-2 rounded-lg border-2 border-gray-200 focus:border-purple-400 outline-none">
+                                <option value="pen-black">Black Pen</option>
+                                <option value="pen-blue">Blue Pen</option>
+                                <option value="pen-red">Red Pen</option>
+                                <option value="pen-green">Green Pen</option>
+                                <option value="pen-purple">Purple Pen</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Font Size</label>
+                            <input id="fontSize" type="range" min="16" max="32" value="22" 
+                                class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-purple-500">
+                            <span id="fontSizeValue" class="text-xs text-gray-500">22px</span>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Line Spacing</label>
+                            <input id="lineHeight" type="range" min="1.4" max="2.5" step="0.1" value="2.2" 
+                                class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-purple-500">
+                            <span id="lineHeightValue" class="text-xs text-gray-500">2.2</span>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 grid grid-cols-2 gap-3">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" id="addDoodles" checked class="w-4 h-4 text-purple-500 rounded focus:ring-purple-400">
+                            <span class="text-sm text-gray-700">Doodles Add Karo</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" id="addSticky" class="w-4 h-4 text-purple-500 rounded focus:ring-purple-400">
+                            <span class="text-sm text-gray-700">Sticky Note</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" id="hindiMode" class="w-4 h-4 text-purple-500 rounded focus:ring-purple-400">
+                            <span class="text-sm text-gray-700">Hindi/Hinglish Mode</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" id="addMargin" checked class="w-4 h-4 text-purple-500 rounded focus:ring-purple-400">
+                            <span class="text-sm text-gray-700">Red Margin Line</span>
+                        </label>
+                    </div>
+
+                    <button onclick="generateNotes()" class="w-full mt-6 px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl hover:shadow-xl hover:scale-105 transition-all duration-300 font-semibold">
+                        <i class="fa-solid fa-wand-magic mr-2"></i>Notes Generate Karo!
+                    </button>
+                </div>
+
+                <!-- Quick Templates -->
+                <div class="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-2xl shadow-xl p-6 border border-orange-100">
+                    <h3 class="text-lg font-bold text-gray-800 mb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-lightbulb text-yellow-500"></i>
+                        Quick Templates
+                    </h3>
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="loadTemplate('physics')" class="px-3 py-1.5 bg-white rounded-lg text-sm hover:shadow-md transition-all border border-gray-200">
+                            Physics Notes
+                        </button>
+                        <button onclick="loadTemplate('math')" class="px-3 py-1.5 bg-white rounded-lg text-sm hover:shadow-md transition-all border border-gray-200">
+                            Math Formula
+                        </button>
+                        <button onclick="loadTemplate('hindi')" class="px-3 py-1.5 bg-white rounded-lg text-sm hover:shadow-md transition-all border border-gray-200">
+                            Hindi Notes
+                        </button>
+                        <button onclick="loadTemplate('summary')" class="px-3 py-1.5 bg-white rounded-lg text-sm hover:shadow-md transition-all border border-gray-200">
+                            Chapter Summary
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Output Section -->
+            <div class="lg:sticky lg:top-24 h-fit">
+                <div class="bg-white rounded-2xl shadow-xl p-4 sm:p-6 border border-gray-100">
+                    <div class="flex items-center justify-between mb-4 no-print">
+                        <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">
+                            <i class="fa-solid fa-book-open text-blue-500"></i>
+                            Notebook Preview
+                        </h2>
+                        <div class="flex gap-2">
+                            <button onclick="zoomOut()" class="w-8 h-8 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
+                                <i class="fa-solid fa-minus text-xs"></i>
+                            </button>
+                            <button onclick="zoomIn()" class="w-8 h-8 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
+                                <i class="fa-solid fa-plus text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div id="notebookContainer" class="overflow-auto max-h-[800px] rounded-lg">
+                        <div id="notebookPage" class="notebook-page w-full min-h-[1056px] p-6 sm:p-12 relative mx-auto" style="max-width: 816px;">
+                            <div class="tape top-4 left-1/2 -translate-x-1/2 hidden" id="topTape"></div>
+                            
+                            <div id="stickyNote" class="hidden sticky-note absolute top-16 right-8 w-32 h-32 p-3 floating">
+                                <p class="handwritten text-sm pen-red font-semibold">Yaad Rakhna!</p>
+                                <p class="handwritten text-xs mt-1">Revise karna mat bhoolna 📚</p>
+                            </div>
+                            
+                            <div id="output" class="relative z-10 pl-0 sm:pl-[50px]">
+                                <div class="text-center mb-8">
+                                    <h1 id="outputTitle" class="handwritten text-4xl font-bold pen-blue mb-2 underline-wavy">
+                                        Welcome to Notesy!
+                                    </h1>
+                                    <p id="outputSubject" class="handwritten text-lg text-gray-600">
+                                        Apne notes type karo left side mein 👈
+                                    </p>
+                                </div>
+                                
+                                <div id="outputContent" class="handwritten text-xl pen-black space-y-3">
+                                    <p class="star-bullet">Ye hai tumhara digital notebook</p>
+                                    <p class="arrow-note">Yahan <span class="imp-marker">important points</span> highlight hote hain</p>
+                                    <div class="doodle-box p-3 my-4">
+                                        <p class="font-semibold pen-red">Box mein likhne ke liye [] use karo</p>
+                                    </div>
+                                    <p>Simple aur <span class="highlight-marker">easy to understand</span> format mein</p>
+                                    <p class="arrow-note"><span class="underline-wavy">Underline</span> ke liye **text** likho</p>
+                                    <p class="mt-6 text-center floating">✨ Start typing to see magic! ✨</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="no-print mt-12 bg-white/80 backdrop-blur-lg border-t border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="text-center text-sm text-gray-600">
+                <p class="font-medium">Made with ❤️ for Students | Notesy v1.0</p>
+                <p class="text-xs mt-1 text-gray-500">Perfect for Hindi/English notes, diagrams, and last-minute revision!</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        let currentZoom = 1;
+        
+        const templates = {
+            physics: {
+                title: "Newton's Laws of Motion",
+                subject: "Physics Chapter 5 | Class 11",
+                content: `## Newton's Three Laws ##
+
+*Newton ka Pehla Law* (Inertia ka Law)
+-> Agar koi object rest mein hai toh rest mein rahega
+-> Agar motion mein hai toh same speed se chalta rahega
+-> Jab tak *external force* na lage
+
+[Formula: F = 0, a = 0]
+
+*Newton ka Doosra Law*
+-> Force = Mass × Acceleration
+-> [F = ma] **Most Important Formula**
+-> Force ki direction mein hi acceleration hota hai
+
+Example: Cricket ball ko jitna zor se maroge, utna tez jayegi!
+
+*Newton ka Teesra Law*
+-> Har action ka equal aur opposite reaction hota hai
+-> **Action = -Reaction**
+-> Gun chalane peeche dhakka lagta hai
+
+Yaad rakhne ki trick:
+Pehla = Inertia, Doosra = F=ma, Teesra = Action-Reaction`
+            },
+            math: {
+                title: "Quadratic Equations",
+                subject: "Mathematics | Class 10",
+                content: `## Dwighaat Samikaran ##
+
+Standard Form: [ax² + bx + c = 0]
+
+*Quadratic Formula*
+-> x = [-b ± √(b² - 4ac)] / 2a
+-> **Discriminant** = b² - 4ac
+
+Discriminant ke 3 Cases:
+1. D > 0 -> *Do real aur alag roots*
+2. D = 0 -> *Do real aur barabar roots*
+3. D < 0 -> *Koi real root nahi*
+
+Example Solve Karein:
+x² - 5x + 6 = 0
+-> a=1, b=-5, c=6
+-> D = 25 - 24 = 1
+-> x = [5 ± 1]/2
+-> x = 3 ya x = 2 **Answer**
+
+[Yaad Rakho: Jab bhi quadratic dekho, pehle D nikalo!]`
+            },
+            hindi: {
+                title: "कबीर के दोहे",
+                subject: "हिंदी साहित्य | कक्षा 9",
+                content: `## कबीरदास जी के प्रसिद्ध दोहे ##
+
+*पहला दोहा*
+-> बुरा जो देखन मैं चला, बुरा न मिलिया कोय
+-> जो दिल खोजा आपना, मुझसे बुरा न कोय
+
+[अर्थ:] जब मैंने बुराई ढूंढनी शुरू की तो किसी में नहीं मिली। जब अपने अंदर झांका तो मुझसे बुरा कोई नहीं।
+
+*दूसरा दोहा*
+-> **धीरे-धीरे रे मना, धीरे सब कुछ होय**
+-> माली सींचे सौ घड़ा, ऋतु आए फल होय
+
+[शिक्षा:] सब काम धैर्य से होते हैं। जल्दबाजी से कुछ नहीं मिलता।
+
+*महत्वपूर्ण बिंदु*
+-> कबीर निर्गुण भक्ति के कवि थे
+-> इनकी भाषा *सधुक्कड़ी* कहलाती है
+-> समाज सुधारक और दार्शनिक थे
+
+परीक्षा में *अर्थ* जरूर पूछा जाता है!`
+            },
+            summary: {
+                title: "Chapter Summary Template",
+                subject: "Subject Name | Date",
+                content: `## Chapter ka Naam ##
+
+*Mukhya Bindu (Main Points)*
+-> Point 1: Yahan main topic likho
+-> Point 2: Dusra important concept
+-> Point 3: Teesra key point
+
+[Important Formulas/Definitions]
+-> Formula 1: **Bold mein**
+-> Definition: Simple words mein samjhao
+
+*Examples*
+1. Example 1 with solution
+2. Example 2 with steps
+
+## Yaad Rakhne Wale Points ##
+-> *IMP* -> Yeh exam mein aata hai
+-> **Trick** -> Short trick for revision
+-> [Diagram yahan bana sakte ho]
+
+Notes: Revision ke liye sticky notes use karo!`
+            }
+        };
+
+        function loadTemplate(type) {
+            const template = templates[type];
+            document.getElementById('noteTitle').value = template.title;
+            document.getElementById('noteSubject').value = template.subject;
+            document.getElementById('noteContent').value = template.content;
+            generateNotes();
+        }
+
+        function generateNotes() {
+            const title = document.getElementById('noteTitle').value || 'Untitled Notes';
+            const subject = document.getElementById('noteSubject').value || '';
+            const content = document.getElementById('noteContent').value;
+            const font = document.getElementById('fontSelect').value;
+            const penColor = document.getElementById('penColor').value;
+            const fontSize = document.getElementById('fontSize').value;
+            const lineHeight = document.getElementById('lineHeight').value;
+            const addDoodles = document.getElementById('addDoodles').checked;
+            const addSticky = document.getElementById('addSticky').checked;
+            const hindiMode = document.getElementById('hindiMode').checked;
+            const addMargin = document.getElementById('addMargin').checked;
+
+            // Update title and subject
+            document.getElementById('outputTitle').textContent = title;
+            document.getElementById('outputSubject').textContent = subject;
+            document.getElementById('outputTitle').className = `handwritten text-4xl font-bold ${penColor} mb-2 underline-wavy`;
+
+            // Process content
+            const outputContent = document.getElementById('outputContent');
+            outputContent.style.fontFamily = font + ', cursive';
+            outputContent.style.fontSize = fontSize + 'px';
+            outputContent.style.lineHeight = lineHeight;
+            outputContent.className = `handwritten ${penColor} space-y-3`;
+            
+            if (hindiMode) {
+                outputContent.classList.add('hindi');
+            } else {
+                outputContent.classList.remove('hindi');
+            }
+
+            // Parse content with markdown-like syntax
+            let html = content.split('\n').map(line => {
+                line = line.trim();
+                if (!line) return '<br>';
+                
+                // Headings
+                if (line.startsWith('##') && line.endsWith('##')) {
+                    return `<h2 class="text-2xl font-bold ${penColor} mt-4 mb-2 underline-wavy">${line.slice(2, -2)}</h2>`;
+                }
+                
+                // Boxes
+                if (line.startsWith('[') && line.endsWith(']')) {
+                    return `<div class="doodle-box p-3 my-3 ${penColor}">${parseInline(line.slice(1, -1))}</div>`;
+                }
+                
+                // Arrows
+                if (line.startsWith('->')) {
+                    return `<p class="arrow-note">${parseInline(line.slice(2).trim())}</p>`;
+                }
+                
+                // Numbered lists
+                if (/^\d+\./.test(line)) {
+                    return `<p class="ml-4">${parseInline(line)}</p>`;
+                }
+                
+                // Regular paragraph
+                return `<p class="star-bullet">${parseInline(line)}</p>`;
+            }).join('');
+
+            outputContent.innerHTML = html;
+            
+            // Toggle sticky note
+            document.getElementById('stickyNote').classList.toggle('hidden', !addSticky);
+            
+            // Toggle margin line
+            const page = document.getElementById('notebookPage');
+            if (addMargin) {
+                page.style.backgroundImage = `linear-gradient(90deg, transparent 79px, #ff6b6b 79px, #ff6b6b 81px, transparent 81px),
+                    linear-gradient(#e8e8e8 0.1em, transparent 0.1em)`;
+            } else {
+                page.style.backgroundImage = `linear-gradient(#e8e8e8 0.1em, transparent 0.1em)`;
+            }
+            
+            // Add random doodles
+            if (addDoodles) {
+                addRandomDoodles();
+            }
+            
+            // Show tape
+            document.getElementById('topTape').classList.remove('hidden');
+        }
+
+        function parseInline(text) {
+            // IMP markers with *
+            text = text.replace(/\*([^*]+)\*/g, '<span class="imp-marker">$1</span>');
+            // Underline with **
+            text = text.replace(/\*\*([^*]+)\*\*/g, '<span class="underline-wavy font-semibold">$1</span>');
+            return text;
+        }
+
+        function addRandomDoodles() {
+            const page = document.getElementById('notebookPage');
+            // Remove old doodles
+            page.querySelectorAll('.doodle-svg').forEach(el => el.remove());
+            
+            const doodles = ['✨', '⭐', '💡', '📚', '✏️', '🎯'];
+            const positions = [
+                { top: '15%', right: '5%' },
+                { bottom: '20%', left: '3%' },
+                { top: '50%', right: '8%' }
+            ];
+            
+            positions.forEach((pos, i) => {
+                const doodle = document.createElement('div');
+                doodle.className = 'doodle-svg absolute text-2xl opacity-30';
+                doodle.style.top = pos.top || 'auto';
+                doodle.style.bottom = pos.bottom || 'auto';
+                doodle.style.left = pos.left || 'auto';
+                doodle.style.right = pos.right || 'auto';
+                doodle.textContent = doodles[i % doodles.length];
+                page.appendChild(doodle);
+            });
+        }
+
+        function downloadPDF() {
+            const { jsPDF } = window.jspdf;
+            const page = document.getElementById('notebookPage');
+            
+            html2canvas(page, {
+                scale: 2,
+                backgroundColor: '#fefdf7',
+                logging: false,
+                useCORS: true
+            }).then(canvas => {
+                const imgData = canvas.toDataURL('image/png');
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                const pdfWidth = pdf.internal.pageSize.getWidth();
+                const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+                
+                pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+                pdf.save('notesy-handwritten-notes.pdf');
+            });
+        }
+
+        function downloadImage() {
+            const page = document.getElementById('notebookPage');
+            
+            html2canvas(page, {
+                scale: 3,
+                backgroundColor: '#fefdf7',
+                logging: false,
+                useCORS: true
+            }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = 'notesy-notes.png';
+                link.href = canvas.toDataURL();
+                link.click();
+            });
+        }
+
+        function zoomIn() {
+            if (currentZoom < 1.5) {
+                currentZoom += 0.1;
+                document.getElementById('notebookPage').style.transform = `scale(${currentZoom})`;
+                document.getElementById('notebookPage').style.transformOrigin = 'top center';
+            }
+        }
+
+        function zoomOut() {
+            if (currentZoom > 0.5) {
+                currentZoom -= 0.1;
+                document.getElementById('notebookPage').style.transform = `scale(${currentZoom})`;
+                document.getElementById('notebookPage').style.transformOrigin = 'top center';
+            }
+        }
+
+        // Event listeners
+        document.getElementById('fontSize').addEventListener('input', (e) => {
+            document.getElementById('fontSizeValue').textContent = e.target.value + 'px';
+            if (document.getElementById('noteContent').value) generateNotes();
+        });
+
+        document.getElementById('lineHeight').addEventListener('input', (e) => {
+            document.getElementById('lineHeightValue').textContent = e.target.value;
+            if (document.getElementById('noteContent').value) generateNotes();
+        });
+
+        document.getElementById('fontSelect').addEventListener('change', generateNotes);
+        document.getElementById('penColor').addEventListener('change', generateNotes);
+        document.getElementById('addDoodles').addEventListener('change', generateNotes);
+        document.getElementById('addSticky').addEventListener('change', generateNotes);
+        document.getElementById('hindiMode').addEventListener('change', generateNotes);
+        document.getElementById('addMargin').addEventListener('change', generateNotes);
+
+        // Auto-generate on input with debounce
+        let debounceTimer;
+        document.getElementById('noteContent').addEventListener('input', () => {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(generateNotes, 500);
+        });
+    </script>
+</body>
+</html>
