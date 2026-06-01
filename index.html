@@ -1,682 +1,885 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Notesy - Handwritten Notes Generator for Students</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600;700&family=Patrick+Hand&family=Kalam:wght@300;400;700&family=Noto+Sans+Devanagari:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nitin Kumar | NK SMART Digital</title>
+  <style>
+    :root {
+      --neon-blue: #00f3ff;
+      --bg-dark: #0a0b10;
+      --bg-card: rgba(15, 17, 23, 0.6);
+      --success-green: #00ff88;
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
     body {
-        font-family: 'Inter', sans-serif;
+      background-color: var(--bg-dark);
+      color: white;
+      font-family: 'Segoe UI', sans-serif;
+      overflow-x: hidden;
     }
     
-    .handwritten {
-        font-family: 'Caveat', 'Patrick Hand', cursive;
+    /* Hero Section */
+    .hero {
+      position: relative;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 0 20px;
+      border-bottom: 2px solid var(--neon-blue);
+      box-shadow: 0 5px 30px rgba(0, 243, 255, 0.3);
     }
     
-    .notebook-page {
-        background-color: #fefdf7;
-        background-image: 
-            linear-gradient(90deg, transparent 79px, #ff6b6b 79px, #ff6b6b 81px, transparent 81px),
-            linear-gradient(#e8e8e8 0.1em, transparent 0.1em);
-        background-size: 100% 2.2em;
-        position: relative;
-        box-shadow: 0 10px 40px rgba(0,0,0,0.1), 0 0 0 1px rgba(0,0,0,0.05);
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at center, rgba(0, 243, 255, 0.1) 0%, transparent 70%);
+      pointer-events: none;
     }
     
-    .notebook-page::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' /%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
-        pointer-events: none;
+    .hero h1 {
+      font-size: clamp(2.5rem, 8vw, 4rem);
+      text-transform: uppercase;
+      letter-spacing: 6px;
+      color: var(--neon-blue);
+      text-shadow: 0 0 20px var(--neon-blue);
+      animation: pulse 2.5s infinite;
+      z-index: 2;
     }
     
-    .hindi {
-        font-family: 'Noto Sans Devanagari', 'Kalam', sans-serif;
+    @keyframes pulse {
+      0%, 100% { text-shadow: 0 0 15px var(--neon-blue); }
+      50% { text-shadow: 0 0 30px var(--neon-blue), 0 0 40px var(--neon-blue); }
     }
     
-    .tape {
-        position: absolute;
-        width: 100px;
-        height: 30px;
-        background: rgba(255,255,200,0.4);
-        transform: rotate(-5deg);
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        border: 1px solid rgba(0,0,0,0.05);
+    .hero p {
+      font-size: clamp(1rem, 3vw, 1.3rem);
+      margin: 25px 0;
+      letter-spacing: 2px;
+      opacity: 0.9;
+      z-index: 2;
     }
     
-    .tape::before {
-        content: '';
-        position: absolute;
-        inset: 0;
-        background-image: repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px);
+    .btn {
+      position: relative;
+      display: inline-block;
+      padding: 16px 40px;
+      border: 2px solid var(--neon-blue);
+      color: var(--neon-blue);
+      text-decoration: none;
+      font-weight: bold;
+      letter-spacing: 2px;
+      transition: 0.4s;
+      z-index: 2;
+      overflow: hidden;
+      background: transparent;
+      cursor: pointer;
+      font-family: inherit;
     }
     
-    .doodle-box {
-        border: 2px solid #333;
-        border-radius: 255px 15px 225px 15px/15px 225px 15px 255px;
-        position: relative;
+    .btn:hover {
+      background: var(--neon-blue);
+      color: black;
+      box-shadow: 0 0 40px var(--neon-blue);
     }
     
-    .imp-marker {
-        display: inline-block;
-        padding: 2px 8px;
-        background: #ffeb3b;
-        transform: rotate(-2deg);
-        font-weight: 600;
-        position: relative;
-        margin: 0 4px;
+    .btn-small {
+      padding: 10px 20px;
+      font-size: 0.85rem;
+      letter-spacing: 1px;
     }
     
-    .imp-marker::before {
-        content: '★';
-        margin-right: 4px;
-        color: #ff6b00;
+    .btn-disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
     }
     
-    .arrow-note {
-        position: relative;
-        padding-left: 24px;
+    .btn-disabled:hover {
+      background: transparent;
+      color: var(--neon-blue);
+      box-shadow: none;
     }
     
-    .arrow-note::before {
-        content: '→';
-        position: absolute;
-        left: 0;
-        color: #e91e63;
-        font-weight: 700;
-        font-size: 1.2em;
+    /* About Section */
+    .about-section {
+      position: relative;
+      padding: 100px 20px;
+      background: var(--bg-dark);
+      border-bottom: 1px solid rgba(0, 243, 255, 0.2);
     }
     
-    .underline-wavy {
-        text-decoration-line: underline;
-        text-decoration-style: wavy;
-        text-decoration-color: #2196f3;
-        text-underline-offset: 3px;
+    .about-container {
+      max-width: 1200px;
+      margin: 0 auto;
     }
     
-    .highlight-marker {
-        background: linear-gradient(to bottom, transparent 50%, #a5d6a7 50%);
+    .section-title {
+      text-align: center;
+      margin-bottom: 60px;
     }
     
-    .star-bullet::before {
-        content: '✦ ';
-        color: #9c27b0;
-        margin-right: 4px;
+    .section-title h2 {
+      color: var(--neon-blue);
+      font-size: clamp(1.8rem, 5vw, 2.8rem);
+      letter-spacing: 4px;
+      text-shadow: 0 0 15px var(--neon-blue);
+      margin-bottom: 15px;
     }
     
-    @keyframes float {
-        0%, 100% { transform: translateY(0px); }
-        50% { transform: translateY(-10px); }
+    .bracket {
+      animation: flicker 3s infinite;
+      display: inline-block;
     }
     
-    .floating {
-        animation: float 3s ease-in-out infinite;
+    @keyframes flicker {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
     }
     
-    .sticky-note {
-        background: #fff59d;
-        transform: rotate(2deg);
-        box-shadow: 2px 2px 10px rgba(0,0,0,0.1);
-        border-bottom-right-radius: 60px 5px;
+    .section-title p {
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 1.1rem;
+      letter-spacing: 1px;
     }
     
-    .pen-blue { color: #1565c0; }
-    .pen-red { color: #c62828; }
-    .pen-green { color: #2e7d32; }
-    .pen-black { color: #212121; }
-    .pen-purple { color: #6a1b9a; }
-    
-    @media print {
-        body { background: white; }
-        .no-print { display: none !important; }
-        .notebook-page { box-shadow: none; page-break-inside: avoid; }
+    .about-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 30px;
+      margin-bottom: 70px;
     }
     
-    .typing-cursor::after {
-        content: '|';
-        animation: blink 1s infinite;
+    .about-card {
+      background: var(--bg-card);
+      border: 1px solid rgba(0, 243, 255, 0.2);
+      padding: 35px 30px;
+      backdrop-filter: blur(10px);
+      transition: 0.4s;
+      clip-path: polygon(0 15px, 15px 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%);
     }
     
-    @keyframes blink {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0; }
+    .about-card:hover {
+      border-color: var(--neon-blue);
+      box-shadow: 0 0 30px rgba(0, 243, 255, 0.3);
+      transform: translateY(-5px);
     }
-</style>
+    
+    .about-card h3 {
+      color: var(--neon-blue);
+      font-size: 1.4rem;
+      letter-spacing: 2px;
+      margin-bottom: 15px;
+      text-shadow: 0 0 10px var(--neon-blue);
+    }
+    
+    .about-card p {
+      color: rgba(255, 255, 255, 0.85);
+      line-height: 1.8;
+      font-size: 0.95rem;
+    }
+    
+    /* Services Grid */
+    .services-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 25px;
+      margin-bottom: 50px;
+    }
+    
+    .service-box {
+      background: linear-gradient(135deg, rgba(0, 243, 255, 0.05), transparent);
+      border: 1px solid rgba(0, 243, 255, 0.15);
+      padding: 30px 25px;
+      position: relative;
+      overflow: hidden;
+      transition: 0.4s;
+    }
+    
+    .service-box::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 2px;
+      background: var(--neon-blue);
+      transition: 0.5s;
+    }
+    
+    .service-box:hover::before {
+      left: 0;
+    }
+    
+    .service-box:hover {
+      background: linear-gradient(135deg, rgba(0, 243, 255, 0.1), transparent);
+      box-shadow: 0 0 25px rgba(0, 243, 255, 0.2);
+    }
+    
+    .service-icon {
+      font-size: 2.5rem;
+      margin-bottom: 15px;
+      filter: drop-shadow(0 0 10px var(--neon-blue));
+    }
+    
+    .service-box h4 {
+      color: var(--neon-blue);
+      font-size: 1.2rem;
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+    }
+    
+    .service-box p {
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 0.9rem;
+      line-height: 1.7;
+      margin-bottom: 15px;
+    }
+    
+    .price-tag {
+      display: inline-block;
+      padding: 8px 15px;
+      background: rgba(0, 255, 136, 0.1);
+      border: 1px solid var(--success-green);
+      color: var(--success-green);
+      font-size: 0.85rem;
+      font-weight: bold;
+      letter-spacing: 1px;
+    }
+    
+    /* Why Choose Us */
+    .why-us {
+      background: var(--bg-card);
+      border: 2px solid rgba(0, 243, 255, 0.3);
+      padding: 40px;
+      text-align: center;
+      backdrop-filter: blur(12px);
+      clip-path: polygon(0 20px, 20px 0, calc(100% - 20px) 0, 100% 20px, 100% calc(100% - 20px), calc(100% - 20px) 100%, 20px 100%, 0 calc(100% - 20px));
+    }
+    
+    .why-us h3 {
+      color: var(--neon-blue);
+      font-size: 1.8rem;
+      letter-spacing: 3px;
+      margin-bottom: 25px;
+      text-shadow: 0 0 15px var(--neon-blue);
+    }
+    
+    .why-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 30px;
+      margin-top: 30px;
+    }
+    
+    .why-item {
+      padding: 20px;
+    }
+    
+    .why-item .number {
+      font-size: 2.5rem;
+      color: var(--neon-blue);
+      font-weight: bold;
+      text-shadow: 0 0 15px var(--neon-blue);
+      margin-bottom: 10px;
+    }
+    
+    .why-item p {
+      color: rgba(255, 255, 255, 0.9);
+      font-size: 0.95rem;
+    }
+    
+    /* Tool Preview Section */
+    .tools-section {
+      position: relative;
+      padding: 100px 20px;
+      background: var(--bg-dark);
+      border-bottom: 1px solid rgba(0, 243, 255, 0.2);
+    }
+    
+    /* Futuristic Form Section */
+    .contact-futuristic {
+      position: relative;
+      padding: 120px 20px;
+      background: var(--bg-dark);
+      overflow: hidden;
+    }
+    
+    .grid-bg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: 
+        linear-gradient(rgba(0, 243, 255, 0.08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 243, 255, 0.08) 1px, transparent 1px);
+      background-size: 60px 60px;
+      animation: gridMove 25s linear infinite;
+      opacity: 0.4;
+    }
+    
+    @keyframes gridMove {
+      0% { transform: translate(0, 0); }
+      100% { transform: translate(60px, 60px); }
+    }
+    
+    .form-container {
+      position: relative;
+      max-width: 650px;
+      margin: 0 auto;
+      padding: 50px 40px;
+      background: var(--bg-card);
+      border: 1px solid rgba(0, 243, 255, 0.25);
+      backdrop-filter: blur(12px);
+      box-shadow: 
+        0 0 50px rgba(0, 243, 255, 0.15),
+        inset 0 0 30px rgba(0, 243, 255, 0.03);
+      clip-path: polygon(0 20px, 20px 0, calc(100% - 20px) 0, 100% 20px, 100% calc(100% - 20px), calc(100% - 20px) 100%, 20px 100%, 0 calc(100% - 20px));
+    }
+    
+    .form-header {
+      text-align: center;
+      margin-bottom: 35px;
+    }
+    
+    .form-header h2 {
+      color: var(--neon-blue);
+      font-size: clamp(1.6rem, 4vw, 2.3rem);
+      letter-spacing: 4px;
+      text-shadow: 0 0 15px var(--neon-blue);
+      margin-bottom: 12px;
+    }
+    
+    .subtext {
+      color: rgba(0, 243, 255, 0.7);
+      font-size: 0.95rem;
+      letter-spacing: 2px;
+    }
+    
+    .free-hook {
+      background: linear-gradient(90deg, transparent, rgba(0, 243, 255, 0.1), transparent);
+      border: 1px solid rgba(0, 243, 255, 0.3);
+      padding: 15px;
+      margin-bottom: 30px;
+      text-align: center;
+      font-size: 0.95rem;
+      letter-spacing: 1px;
+      color: var(--neon-blue);
+      animation: hookGlow 2s infinite;
+    }
+    
+    @keyframes hookGlow {
+      0%, 100% { box-shadow: 0 0 10px rgba(0, 243, 255, 0.2); }
+      50% { box-shadow: 0 0 20px rgba(0, 243, 255, 0.4); }
+    }
+    
+    .input-wrap {
+      position: relative;
+      margin-bottom: 38px;
+    }
+    
+    .input-wrap input,
+    .input-wrap select,
+    .input-wrap textarea {
+      width: 100%;
+      padding: 16px 0 12px 0;
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid #2a2a2a;
+      color: white;
+      font-size: 1rem;
+      font-family: inherit;
+      outline: none;
+    }
+    
+    .input-wrap textarea {
+      height: 110px;
+      resize: none;
+    }
+    
+    .input-wrap label {
+      position: absolute;
+      top: 16px;
+      left: 0;
+      color: #555;
+      font-size: 0.85rem;
+      letter-spacing: 2px;
+      pointer-events: none;
+      transition: 0.3s ease;
+      text-transform: uppercase;
+    }
+    
+    .input-wrap input:focus ~ label,
+    .input-wrap input:valid ~ label,
+    .input-wrap select:valid ~ label,
+    .input-wrap textarea:focus ~ label,
+    .input-wrap textarea:valid ~ label {
+      top: -12px;
+      font-size: 0.7rem;
+      color: var(--neon-blue);
+      text-shadow: 0 0 8px var(--neon-blue);
+    }
+    
+    .glow-line {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: var(--neon-blue);
+      box-shadow: 0 0 12px var(--neon-blue);
+      transition: 0.4s ease;
+    }
+    
+    .input-wrap input:focus ~ .glow-line,
+    .input-wrap select:focus ~ .glow-line,
+    .input-wrap textarea:focus ~ .glow-line {
+      width: 100%;
+    }
+    
+    .follow-check {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 20px 0 30px 0;
+      padding: 12px;
+      background: rgba(0, 243, 255, 0.05);
+      border-left: 2px solid var(--neon-blue);
+    }
+    
+    .follow-check input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--neon-blue);
+      cursor: pointer;
+    }
+    
+    .follow-check label {
+      font-size: 0.85rem;
+      color: rgba(255, 255, 255, 0.8);
+      cursor: pointer;
+    }
+    
+    .follow-check a {
+      color: var(--neon-blue);
+      text-decoration: none;
+      font-weight: bold;
+    }
+    
+    .follow-check a:hover {
+      text-shadow: 0 0 8px var(--neon-blue);
+    }
+    
+    #leadForm button {
+      position: relative;
+      width: 100%;
+      padding: 18px;
+      background: transparent;
+      border: 2px solid var(--neon-blue);
+      color: var(--neon-blue);
+      font-weight: bold;
+      font-size: 1rem;
+      letter-spacing: 3px;
+      cursor: pointer;
+      overflow: hidden;
+      transition: 0.4s;
+      margin-top: 15px;
+      text-transform: uppercase;
+    }
+    
+    .btn-text {
+      position: relative;
+      z-index: 2;
+    }
+    
+    .btn-glow {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      background: var(--neon-blue);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      transition: 0.6s;
+      z-index: 1;
+    }
+    
+    #leadForm button:hover {
+      color: black;
+      box-shadow: 0 0 35px var(--neon-blue);
+    }
+    
+    #leadForm button:hover .btn-glow {
+      width: 700px;
+      height: 700px;
+    }
+    
+    /* Success Modal */
+    .success-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.95);
+      backdrop-filter: blur(10px);
+      z-index: 9999;
+      justify-content: center;
+      align-items: center;
+      animation: fadeIn 0.3s;
+    }
+    
+    .success-overlay.active {
+      display: flex;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    
+    .success-box {
+      background: var(--bg-card);
+      border: 2px solid var(--success-green);
+      padding: 50px 40px;
+      text-align: center;
+      max-width: 500px;
+      box-shadow: 0 0 60px rgba(0, 255, 136, 0.4);
+      clip-path: polygon(0 20px, 20px 0, calc(100% - 20px) 0, 100% 20px, 100% calc(100% - 20px), calc(100% - 20px) 100%, 20px 100%, 0 calc(100% - 20px));
+      animation: scaleUp 0.4s ease;
+    }
+    
+    @keyframes scaleUp {
+      from { transform: scale(0.8); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    
+    .success-icon {
+      font-size: 4rem;
+      color: var(--success-green);
+      text-shadow: 0 0 20px var(--success-green);
+      margin-bottom: 20px;
+      animation: checkPop 0.6s ease;
+    }
+    
+    @keyframes checkPop {
+      0% { transform: scale(0); }
+      50% { transform: scale(1.2); }
+      100% { transform: scale(1); }
+    }
+    
+    .success-box h3 {
+      color: var(--success-green);
+      font-size: 1.8rem;
+      letter-spacing: 3px;
+      margin-bottom: 15px;
+      text-shadow: 0 0 15px var(--success-green);
+    }
+    
+    .success-box p {
+      color: rgba(255, 255, 255, 0.9);
+      font-size: 1rem;
+      line-height: 1.6;
+      margin-bottom: 25px;
+    }
+    
+    .countdown {
+      font-size: 1.5rem;
+      color: var(--neon-blue);
+      font-weight: bold;
+      text-shadow: 0 0 10px var(--neon-blue);
+    }
+    
+    @media (max-width: 768px) {
+      .form-container, .why-us {
+        padding: 35px 25px;
+      }
+      .hero h1 {
+        letter-spacing: 4px;
+      }
+      .success-box {
+        margin: 20px;
+        padding: 40px 30px;
+      }
+      .about-grid, .services-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
 </head>
-<body class="bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 min-h-screen">
-    <!-- Header -->
-    <header class="no-print bg-white/80 backdrop-blur-lg border-b border-gray-200 sticky top-0 z-50 shadow-sm">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-            <div class="flex items-center justify-between flex-wrap gap-3">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg">
-                        <i class="fa-solid fa-pen-fancy text-white text-lg"></i>
-                    </div>
-                    <div>
-                        <h1 class="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">Notesy</h1>
-                        <p class="text-xs text-gray-500">Handwritten Notes Generator</p>
-                    </div>
-                </div>
-                <div class="flex items-center gap-2">
-                    <button onclick="downloadPDF()" class="px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:shadow-lg transition-all duration-300 text-sm font-medium">
-                        <i class="fa-solid fa-file-pdf mr-2"></i>PDF Download
-                    </button>
-                    <button onclick="downloadImage()" class="px-4 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-lg hover:shadow-lg transition-all duration-300 text-sm font-medium">
-                        <i class="fa-solid fa-image mr-2"></i>PNG Download
-                    </button>
-                </div>
-            </div>
+<body>
+  <!-- Hero Section -->
+  <div class="hero">
+    <h1>NK SMART DIGITAL</h1>
+    <p>Mera Sach: Bhagalpur se Digital Kranti Tak</p>
+    <a href="#about" class="btn">EXPLORE SERVICES</a>
+  </div>
+
+  <!-- About Section -->
+  <section id="about" class="about-section">
+    <div class="about-container">
+      <div class="section-title">
+        <h2><span class="bracket">[</span> WHO AM I <span class="bracket">]</span></h2>
+        <p>Digital Duniya Ka Apna Nitin Bhai</p>
+      </div>
+
+      <div class="about-grid">
+        <div class="about-card">
+          <h3>👨‍💻 MERA BAARE MEIN</h3>
+          <p>Namaste! Main Nitin Kumar, Bhagalpur se. College students se lekar chote business owners tak, sabko digital banane ka junoon hai. Mera mission simple hai - har kisi ko sasti aur professional digital identity dena. Coding, design aur marketing ka 3+ saal ka experience lekar aapki service mein hazir hun.</p>
         </div>
-    </header>
 
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div class="grid lg:grid-cols-2 gap-8">
-            <!-- Input Section -->
-            <div class="no-print space-y-6">
-                <div class="bg-white rounded-2xl shadow-xl p-6 border border-gray-100">
-                    <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                        <i class="fa-solid fa-keyboard text-purple-500"></i>
-                        Apna Text Yahan Likho
-                    </h2>
-                    
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Note ka Title</label>
-                            <input id="noteTitle" type="text" placeholder="Ex: Physics - Newton's Laws" 
-                                class="w-full px-4 py-2.5 rounded-lg border-2 border-gray-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-100 transition-all outline-none">
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Subject / Date</label>
-                            <input id="noteSubject" type="text" placeholder="Ex: Physics | 10th Oct 2025" 
-                                class="w-full px-4 py-2.5 rounded-lg border-2 border-gray-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-100 transition-all outline-none">
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Notes Content</label>
-                            <textarea id="noteContent" rows="10" placeholder="Apne notes yahan paste karo ya likho...
-
-Tips:
-• Use *text* for IMP markers
-• Use -> for arrows
-• Use [] for boxes
-• Use **text** for underline
-• Use ## for headings"
-                                class="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-100 transition-all outline-none font-mono text-sm"></textarea>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Customization Options -->
-                <div class="bg-white rounded-2xl shadow-xl p-6 border border-gray-100">
-                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-                        <i class="fa-solid fa-wand-magic-sparkles text-pink-500"></i>
-                        Customize Karo
-                    </h3>
-                    
-                    <div class="grid sm:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Handwriting Font</label>
-                            <select id="fontSelect" class="w-full px-3 py-2 rounded-lg border-2 border-gray-200 focus:border-purple-400 outline-none">
-                                <option value="Caveat">Caveat - Casual</option>
-                                <option value="Patrick Hand">Patrick Hand - Neat</option>
-                                <option value="Kalam">Kalam - Hindi Friendly</option>
-                            </select>
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Pen Color</label>
-                            <select id="penColor" class="w-full px-3 py-2 rounded-lg border-2 border-gray-200 focus:border-purple-400 outline-none">
-                                <option value="pen-black">Black Pen</option>
-                                <option value="pen-blue">Blue Pen</option>
-                                <option value="pen-red">Red Pen</option>
-                                <option value="pen-green">Green Pen</option>
-                                <option value="pen-purple">Purple Pen</option>
-                            </select>
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Font Size</label>
-                            <input id="fontSize" type="range" min="16" max="32" value="22" 
-                                class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-purple-500">
-                            <span id="fontSizeValue" class="text-xs text-gray-500">22px</span>
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Line Spacing</label>
-                            <input id="lineHeight" type="range" min="1.4" max="2.5" step="0.1" value="2.2" 
-                                class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-purple-500">
-                            <span id="lineHeightValue" class="text-xs text-gray-500">2.2</span>
-                        </div>
-                    </div>
-
-                    <div class="mt-4 grid grid-cols-2 gap-3">
-                        <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" id="addDoodles" checked class="w-4 h-4 text-purple-500 rounded focus:ring-purple-400">
-                            <span class="text-sm text-gray-700">Doodles Add Karo</span>
-                        </label>
-                        <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" id="addSticky" class="w-4 h-4 text-purple-500 rounded focus:ring-purple-400">
-                            <span class="text-sm text-gray-700">Sticky Note</span>
-                        </label>
-                        <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" id="hindiMode" class="w-4 h-4 text-purple-500 rounded focus:ring-purple-400">
-                            <span class="text-sm text-gray-700">Hindi/Hinglish Mode</span>
-                        </label>
-                        <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" id="addMargin" checked class="w-4 h-4 text-purple-500 rounded focus:ring-purple-400">
-                            <span class="text-sm text-gray-700">Red Margin Line</span>
-                        </label>
-                    </div>
-
-                    <button onclick="generateNotes()" class="w-full mt-6 px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl hover:shadow-xl hover:scale-105 transition-all duration-300 font-semibold">
-                        <i class="fa-solid fa-wand-magic mr-2"></i>Notes Generate Karo!
-                    </button>
-                </div>
-
-                <!-- Quick Templates -->
-                <div class="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-2xl shadow-xl p-6 border border-orange-100">
-                    <h3 class="text-lg font-bold text-gray-800 mb-3 flex items-center gap-2">
-                        <i class="fa-solid fa-lightbulb text-yellow-500"></i>
-                        Quick Templates
-                    </h3>
-                    <div class="flex flex-wrap gap-2">
-                        <button onclick="loadTemplate('physics')" class="px-3 py-1.5 bg-white rounded-lg text-sm hover:shadow-md transition-all border border-gray-200">
-                            Physics Notes
-                        </button>
-                        <button onclick="loadTemplate('math')" class="px-3 py-1.5 bg-white rounded-lg text-sm hover:shadow-md transition-all border border-gray-200">
-                            Math Formula
-                        </button>
-                        <button onclick="loadTemplate('hindi')" class="px-3 py-1.5 bg-white rounded-lg text-sm hover:shadow-md transition-all border border-gray-200">
-                            Hindi Notes
-                        </button>
-                        <button onclick="loadTemplate('summary')" class="px-3 py-1.5 bg-white rounded-lg text-sm hover:shadow-md transition-all border border-gray-200">
-                            Chapter Summary
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Output Section -->
-            <div class="lg:sticky lg:top-24 h-fit">
-                <div class="bg-white rounded-2xl shadow-xl p-4 sm:p-6 border border-gray-100">
-                    <div class="flex items-center justify-between mb-4 no-print">
-                        <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">
-                            <i class="fa-solid fa-book-open text-blue-500"></i>
-                            Notebook Preview
-                        </h2>
-                        <div class="flex gap-2">
-                            <button onclick="zoomOut()" class="w-8 h-8 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
-                                <i class="fa-solid fa-minus text-xs"></i>
-                            </button>
-                            <button onclick="zoomIn()" class="w-8 h-8 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
-                                <i class="fa-solid fa-plus text-xs"></i>
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div id="notebookContainer" class="overflow-auto max-h-[800px] rounded-lg">
-                        <div id="notebookPage" class="notebook-page w-full min-h-[1056px] p-6 sm:p-12 relative mx-auto" style="max-width: 816px;">
-                            <div class="tape top-4 left-1/2 -translate-x-1/2 hidden" id="topTape"></div>
-                            
-                            <div id="stickyNote" class="hidden sticky-note absolute top-16 right-8 w-32 h-32 p-3 floating">
-                                <p class="handwritten text-sm pen-red font-semibold">Yaad Rakhna!</p>
-                                <p class="handwritten text-xs mt-1">Revise karna mat bhoolna 📚</p>
-                            </div>
-                            
-                            <div id="output" class="relative z-10 pl-0 sm:pl-[50px]">
-                                <div class="text-center mb-8">
-                                    <h1 id="outputTitle" class="handwritten text-4xl font-bold pen-blue mb-2 underline-wavy">
-                                        Welcome to Notesy!
-                                    </h1>
-                                    <p id="outputSubject" class="handwritten text-lg text-gray-600">
-                                        Apne notes type karo left side mein 👈
-                                    </p>
-                                </div>
-                                
-                                <div id="outputContent" class="handwritten text-xl pen-black space-y-3">
-                                    <p class="star-bullet">Ye hai tumhara digital notebook</p>
-                                    <p class="arrow-note">Yahan <span class="imp-marker">important points</span> highlight hote hain</p>
-                                    <div class="doodle-box p-3 my-4">
-                                        <p class="font-semibold pen-red">Box mein likhne ke liye [] use karo</p>
-                                    </div>
-                                    <p>Simple aur <span class="highlight-marker">easy to understand</span> format mein</p>
-                                    <p class="arrow-note"><span class="underline-wavy">Underline</span> ke liye **text** likho</p>
-                                    <p class="mt-6 text-center floating">✨ Start typing to see magic! ✨</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <div class="about-card">
+          <h3>🎯 HUM KYA KARTE HAIN</h3>
+          <p>Hum aapke ideas ko digital reality banate hain. Chahe admission ke liye portfolio chahiye, business ke liye website, ya social media pe dhamaka karna ho - sab kuch ek jagah. AI tools + human creativity ka perfect combo dekar aapka kaam lightning fast kar dete hain.</p>
         </div>
-    </main>
 
-    <!-- Footer -->
-    <footer class="no-print mt-12 bg-white/80 backdrop-blur-lg border-t border-gray-200">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-            <div class="text-center text-sm text-gray-600">
-                <p class="font-medium">Made with ❤️ for Students | Notesy v1.0</p>
-                <p class="text-xs mt-1 text-gray-500">Perfect for Hindi/English notes, diagrams, and last-minute revision!</p>
-            </div>
+        <div class="about-card">
+          <h3>🤝 HUM KAISE HELP KARTE HAIN</h3>
+          <p>1. Free consultation - pehle samjhenge phir banayenge<br>
+          2. 24-48 ghante me delivery - time ki kadar hai<br>
+          3. Unlimited revisions - 100% satisfaction tak<br>
+          4. Lifetime support - banane ke baad bhi saath denge</p>
         </div>
-    </footer>
+      </div>
 
-    <script>
-        let currentZoom = 1;
+      <!-- Services Section -->
+      <div class="section-title">
+        <h2><span class="bracket">[</span> OUR SERVICES <span class="bracket">]</span></h2>
+        <p>Jo Bhi Digital Chahiye, Yahan Milega</p>
+      </div>
+
+      <div class="services-grid">
+        <div class="service-box">
+          <div class="service-icon">🎨</div>
+          <h4>AI POSTERS & GRAPHICS</h4>
+          <p>Festival posts, business banners, admission posters, social media creatives. AI + Photoshop combo se unique designs.</p>
+          <span class="price-tag">STARTS @ ₹99 ONLY</span>
+        </div>
+
+        <div class="service-box">
+          <div class="service-icon">🌐</div>
+          <h4>WEBSITE DEVELOPMENT</h4>
+          <p>Portfolio, business site, landing pages. Mobile-friendly, fast loading, SEO ready. Domain + hosting setup free.</p>
+          <span class="price-tag">STARTS @ ₹1,999 ONLY</span>
+        </div>
+
+        <div class="service-box">
+          <div class="service-icon">📱</div>
+          <h4>SOCIAL MEDIA MANAGEMENT</h4>
+          <p>Daily posts, reels, story designs. Facebook, Instagram, YouTube ke liye complete branding package.</p>
+          <span class="price-tag">STARTS @ ₹2,999/MONTH</span>
+        </div>
+
+        <div class="service-box">
+          <div class="service-icon">🎓</div>
+          <h4>ADMISSION HELP</h4>
+          <p>College portfolio, SOP design, resume banwana, LinkedIn profile setup. Admission ke liye full digital kit.</p>
+          <span class="price-tag">STARTS @ ₹499 ONLY</span>
+        </div>
+
+        <div class="service-box">
+          <div class="service-icon">🎬</div>
+          <h4>VIDEO EDITING</h4>
+          <p>Reels, YouTube videos, ads, promo videos. Trending effects + fast delivery. Thumbnail free.</p>
+          <span class="price-tag">STARTS @ ₹299/VIDEO</span>
+        </div>
+
+        <div class="service-box">
+          <div class="service-icon">💼</div>
+          <h4>BRANDING PACKAGE</h4>
+          <p>Logo + Visiting Card + Letterhead + Social Media Kit. Complete business identity ek hi price me.</p>
+          <span class="price-tag">STARTS @ ₹1,499 ONLY</span>
+        </div>
+      </div>
+
+      <!-- Why Choose Us -->
+      <div class="why-us">
+        <h3>MARKET SE 70% SASTA KYUN?</h3>
+        <p style="color: rgba(255,255,255,0.8); margin-bottom: 10px;">Hum bade agency nahi, hum aapke apne Nitin Bhai hain. Koi office rent nahi, koi team salary nahi. Direct kaam, direct bachat!</p>
         
-        const templates = {
-            physics: {
-                title: "Newton's Laws of Motion",
-                subject: "Physics Chapter 5 | Class 11",
-                content: `## Newton's Three Laws ##
+        <div class="why-grid">
+          <div class="why-item">
+            <div class="number">3X</div>
+            <p>Faster Delivery</p>
+          </div>
+          <div class="why-item">
+            <div class="number">70%</div>
+            <p>Cheaper Than Market</p>
+          </div>
+          <div class="why-item">
+            <div class="number">100%</div>
+            <p>Satisfaction Guarantee</p>
+          </div>
+          <div class="why-item">
+            <div class="number">24/7</div>
+            <p>WhatsApp Support</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
 
-*Newton ka Pehla Law* (Inertia ka Law)
--> Agar koi object rest mein hai toh rest mein rahega
--> Agar motion mein hai toh same speed se chalta rahega
--> Jab tak *external force* na lage
+  <!-- Tool Preview Section - NEW -->
+  <section id="tools" class="tools-section">
+    <div class="about-container">
+      <div class="section-title">
+        <h2><span class="bracket">[</span> LIVE TOOL PREVIEW <span class="bracket">]</span></h2>
+        <p>Yahan mere banaye hue tools ko live check karein</p>
+      </div>
+      
+      <div class="services-grid">
+        <!-- Tool 1: Notesy -->
+        <div class="service-box">
+          <div class="service-icon">📝</div>
+          <h4>NOTESY TOOL</h4>
+          <p>Apne notes ko smart tarike se organize aur generate karein. AI-powered note taking for students & creators.</p>
+          <a href="notesy.html" class="btn btn-small">LAUNCH PREVIEW</a>
+        </div>
+        
+        <!-- Tool 2: Coming Soon -->
+        <div class="service-box">
+          <div class="service-icon">🚀</div>
+          <h4>POSTER GENERATOR</h4>
+          <p>AI se instant festival posters, business banners banao. Bas text daalo, poster ready. Jaldi hi live hoga.</p>
+          <button class="btn btn-small btn-disabled">COMING SOON</button>
+        </div>
+        
+        <!-- Tool 3: Coming Soon -->
+        <div class="service-box">
+          <div class="service-icon">🎨</div>
+          <h4>LOGO MAKER</h4>
+          <p>Apne business ke liye professional logo 2 minute me. AI + custom templates. Beta testing chal rahi hai.</p>
+          <button class="btn btn-small btn-disabled">COMING SOON</button>
+        </div>
+      </div>
+    </div>
+  </section>
 
-[Formula: F = 0, a = 0]
+  <!-- Futuristic Form Section -->
+  <section id="contact-form" class="contact-futuristic">
+    <div class="grid-bg"></div>
+    
+    <div class="form-container">
+      <div class="form-header">
+        <h2><span class="bracket">[</span> INITIATE CONNECTION <span class="bracket">]</span></h2>
+        <p class="subtext">> System Ready For Transmission <</p>
+      </div>
 
-*Newton ka Doosra Law*
--> Force = Mass × Acceleration
--> [F = ma] **Most Important Formula**
--> Force ki direction mein hi acceleration hota hai
+      <div class="free-hook">
+        ⚡ Apna pehla AI poster free mein banwane ke liye details bharein ⚡
+      </div>
 
-Example: Cricket ball ko jitna zor se maroge, utna tez jayegi!
+      <form id="leadForm">
+        <div class="input-wrap">
+          <input type="text" id="name" required>
+          <label>ENTER YOUR NAME</label>
+          <span class="glow-line"></span>
+        </div>
 
-*Newton ka Teesra Law*
--> Har action ka equal aur opposite reaction hota hai
--> **Action = -Reaction**
--> Gun chalane peeche dhakka lagta hai
+        <div class="input-wrap">
+          <select id="reason" required>
+            <option value="" disabled selected></option>
+            <option value="Admission Help">ADMISSION HELP</option>
+            <option value="Digital Branding">DIGITAL BRANDING / POSTERS</option>
+            <option value="Web Development">WEB DEVELOPMENT</option>
+            <option value="Video Editing">VIDEO EDITING</option>
+            <option value="Social Media">SOCIAL MEDIA MANAGEMENT</option>
+            <option value="Others">CUSTOM REQUEST</option>
+          </select>
+          <label>SELECT PROTOCOL</label>
+          <span class="glow-line"></span>
+        </div>
 
-Yaad rakhne ki trick:
-Pehla = Inertia, Doosra = F=ma, Teesra = Action-Reaction`
-            },
-            math: {
-                title: "Quadratic Equations",
-                subject: "Mathematics | Class 10",
-                content: `## Dwighaat Samikaran ##
+        <div class="input-wrap">
+          <textarea id="message" required></textarea>
+          <label>TRANSMIT YOUR MESSAGE</label>
+          <span class="glow-line"></span>
+        </div>
 
-Standard Form: [ax² + bx + c = 0]
+        <div class="follow-check">
+          <input type="checkbox" id="followed" checked>
+          <label for="followed">
+            Kya aapne Nitin Bhai ko Facebook par follow kiya? 
+            <a href="https://facebook.com/100069137446448" target="_blank">Follow karne ke liye yahan click karein</a>
+          </label>
+        </div>
 
-*Quadratic Formula*
--> x = [-b ± √(b² - 4ac)] / 2a
--> **Discriminant** = b² - 4ac
+        <button type="button" onclick="handleSubmit()">
+          <span class="btn-text">EXECUTE: SEND TO NITIN BHAI</span>
+          <span class="btn-glow"></span>
+        </button>
+      </form>
+    </div>
+  </section>
 
-Discriminant ke 3 Cases:
-1. D > 0 -> *Do real aur alag roots*
-2. D = 0 -> *Do real aur barabar roots*
-3. D < 0 -> *Koi real root nahi*
+  <!-- Success Modal -->
+  <div class="success-overlay" id="successOverlay">
+    <div class="success-box">
+      <div class="success-icon">✓</div>
+      <h3>TRANSMISSION SUCCESSFUL</h3>
+      <p>Details received! Nitin Bhai se connect ho rahe hain...</p>
+      <p>Redirecting to WhatsApp in <span class="countdown" id="countdown">3</span>s</p>
+    </div>
+  </div>
 
-Example Solve Karein:
-x² - 5x + 6 = 0
--> a=1, b=-5, c=6
--> D = 25 - 24 = 1
--> x = [5 ± 1]/2
--> x = 3 ya x = 2 **Answer**
-
-[Yaad Rakho: Jab bhi quadratic dekho, pehle D nikalo!]`
-            },
-            hindi: {
-                title: "कबीर के दोहे",
-                subject: "हिंदी साहित्य | कक्षा 9",
-                content: `## कबीरदास जी के प्रसिद्ध दोहे ##
-
-*पहला दोहा*
--> बुरा जो देखन मैं चला, बुरा न मिलिया कोय
--> जो दिल खोजा आपना, मुझसे बुरा न कोय
-
-[अर्थ:] जब मैंने बुराई ढूंढनी शुरू की तो किसी में नहीं मिली। जब अपने अंदर झांका तो मुझसे बुरा कोई नहीं।
-
-*दूसरा दोहा*
--> **धीरे-धीरे रे मना, धीरे सब कुछ होय**
--> माली सींचे सौ घड़ा, ऋतु आए फल होय
-
-[शिक्षा:] सब काम धैर्य से होते हैं। जल्दबाजी से कुछ नहीं मिलता।
-
-*महत्वपूर्ण बिंदु*
--> कबीर निर्गुण भक्ति के कवि थे
--> इनकी भाषा *सधुक्कड़ी* कहलाती है
--> समाज सुधारक और दार्शनिक थे
-
-परीक्षा में *अर्थ* जरूर पूछा जाता है!`
-            },
-            summary: {
-                title: "Chapter Summary Template",
-                subject: "Subject Name | Date",
-                content: `## Chapter ka Naam ##
-
-*Mukhya Bindu (Main Points)*
--> Point 1: Yahan main topic likho
--> Point 2: Dusra important concept
--> Point 3: Teesra key point
-
-[Important Formulas/Definitions]
--> Formula 1: **Bold mein**
--> Definition: Simple words mein samjhao
-
-*Examples*
-1. Example 1 with solution
-2. Example 2 with steps
-
-## Yaad Rakhne Wale Points ##
--> *IMP* -> Yeh exam mein aata hai
--> **Trick** -> Short trick for revision
--> [Diagram yahan bana sakte ho]
-
-Notes: Revision ke liye sticky notes use karo!`
-            }
-        };
-
-        function loadTemplate(type) {
-            const template = templates[type];
-            document.getElementById('noteTitle').value = template.title;
-            document.getElementById('noteSubject').value = template.subject;
-            document.getElementById('noteContent').value = template.content;
-            generateNotes();
+  <script>
+    function handleSubmit() {
+      const name = document.getElementById('name').value.trim();
+      const reason = document.getElementById('reason').value;
+      const msg = document.getElementById('message').value.trim();
+      const followed = document.getElementById('followed').checked;
+      
+      if (!name || !reason || !msg) {
+        alert('>>> ERROR: ALL FIELDS REQUIRED <<<');
+        return;
+      }
+      
+      const overlay = document.getElementById('successOverlay');
+      overlay.classList.add('active');
+      
+      let count = 3;
+      const countdownEl = document.getElementById('countdown');
+      const followText = followed ? '%0A✅ Facebook Followed' : '%0A⚠️ Facebook Not Followed Yet';
+      
+      const text = `*INCOMING TRANSMISSION*%0A%0A>> USER: ${encodeURIComponent(name)}%0A>> PROTOCOL: ${encodeURIComponent(reason)}${followText}%0A%0A>> MESSAGE:%0A${encodeURIComponent(msg)}%0A%0A*END TRANSMISSION*`;
+      const url = `https://wa.me/916204145966?text=${text}`;
+      
+      const timer = setInterval(() => {
+        count--;
+        countdownEl.textContent = count;
+        if (count === 0) {
+          clearInterval(timer);
+          window.open(url, '_blank');
+          setTimeout(() => {
+            overlay.classList.remove('active');
+            document.getElementById('leadForm').reset();
+          }, 500);
         }
-
-        function generateNotes() {
-            const title = document.getElementById('noteTitle').value || 'Untitled Notes';
-            const subject = document.getElementById('noteSubject').value || '';
-            const content = document.getElementById('noteContent').value;
-            const font = document.getElementById('fontSelect').value;
-            const penColor = document.getElementById('penColor').value;
-            const fontSize = document.getElementById('fontSize').value;
-            const lineHeight = document.getElementById('lineHeight').value;
-            const addDoodles = document.getElementById('addDoodles').checked;
-            const addSticky = document.getElementById('addSticky').checked;
-            const hindiMode = document.getElementById('hindiMode').checked;
-            const addMargin = document.getElementById('addMargin').checked;
-
-            // Update title and subject
-            document.getElementById('outputTitle').textContent = title;
-            document.getElementById('outputSubject').textContent = subject;
-            document.getElementById('outputTitle').className = `handwritten text-4xl font-bold ${penColor} mb-2 underline-wavy`;
-
-            // Process content
-            const outputContent = document.getElementById('outputContent');
-            outputContent.style.fontFamily = font + ', cursive';
-            outputContent.style.fontSize = fontSize + 'px';
-            outputContent.style.lineHeight = lineHeight;
-            outputContent.className = `handwritten ${penColor} space-y-3`;
-            
-            if (hindiMode) {
-                outputContent.classList.add('hindi');
-            } else {
-                outputContent.classList.remove('hindi');
-            }
-
-            // Parse content with markdown-like syntax
-            let html = content.split('\n').map(line => {
-                line = line.trim();
-                if (!line) return '<br>';
-                
-                // Headings
-                if (line.startsWith('##') && line.endsWith('##')) {
-                    return `<h2 class="text-2xl font-bold ${penColor} mt-4 mb-2 underline-wavy">${line.slice(2, -2)}</h2>`;
-                }
-                
-                // Boxes
-                if (line.startsWith('[') && line.endsWith(']')) {
-                    return `<div class="doodle-box p-3 my-3 ${penColor}">${parseInline(line.slice(1, -1))}</div>`;
-                }
-                
-                // Arrows
-                if (line.startsWith('->')) {
-                    return `<p class="arrow-note">${parseInline(line.slice(2).trim())}</p>`;
-                }
-                
-                // Numbered lists
-                if (/^\d+\./.test(line)) {
-                    return `<p class="ml-4">${parseInline(line)}</p>`;
-                }
-                
-                // Regular paragraph
-                return `<p class="star-bullet">${parseInline(line)}</p>`;
-            }).join('');
-
-            outputContent.innerHTML = html;
-            
-            // Toggle sticky note
-            document.getElementById('stickyNote').classList.toggle('hidden', !addSticky);
-            
-            // Toggle margin line
-            const page = document.getElementById('notebookPage');
-            if (addMargin) {
-                page.style.backgroundImage = `linear-gradient(90deg, transparent 79px, #ff6b6b 79px, #ff6b6b 81px, transparent 81px),
-                    linear-gradient(#e8e8e8 0.1em, transparent 0.1em)`;
-            } else {
-                page.style.backgroundImage = `linear-gradient(#e8e8e8 0.1em, transparent 0.1em)`;
-            }
-            
-            // Add random doodles
-            if (addDoodles) {
-                addRandomDoodles();
-            }
-            
-            // Show tape
-            document.getElementById('topTape').classList.remove('hidden');
-        }
-
-        function parseInline(text) {
-            // IMP markers with *
-            text = text.replace(/\*([^*]+)\*/g, '<span class="imp-marker">$1</span>');
-            // Underline with **
-            text = text.replace(/\*\*([^*]+)\*\*/g, '<span class="underline-wavy font-semibold">$1</span>');
-            return text;
-        }
-
-        function addRandomDoodles() {
-            const page = document.getElementById('notebookPage');
-            // Remove old doodles
-            page.querySelectorAll('.doodle-svg').forEach(el => el.remove());
-            
-            const doodles = ['✨', '⭐', '💡', '📚', '✏️', '🎯'];
-            const positions = [
-                { top: '15%', right: '5%' },
-                { bottom: '20%', left: '3%' },
-                { top: '50%', right: '8%' }
-            ];
-            
-            positions.forEach((pos, i) => {
-                const doodle = document.createElement('div');
-                doodle.className = 'doodle-svg absolute text-2xl opacity-30';
-                doodle.style.top = pos.top || 'auto';
-                doodle.style.bottom = pos.bottom || 'auto';
-                doodle.style.left = pos.left || 'auto';
-                doodle.style.right = pos.right || 'auto';
-                doodle.textContent = doodles[i % doodles.length];
-                page.appendChild(doodle);
-            });
-        }
-
-        function downloadPDF() {
-            const { jsPDF } = window.jspdf;
-            const page = document.getElementById('notebookPage');
-            
-            html2canvas(page, {
-                scale: 2,
-                backgroundColor: '#fefdf7',
-                logging: false,
-                useCORS: true
-            }).then(canvas => {
-                const imgData = canvas.toDataURL('image/png');
-                const pdf = new jsPDF('p', 'mm', 'a4');
-                const pdfWidth = pdf.internal.pageSize.getWidth();
-                const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-                
-                pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-                pdf.save('notesy-handwritten-notes.pdf');
-            });
-        }
-
-        function downloadImage() {
-            const page = document.getElementById('notebookPage');
-            
-            html2canvas(page, {
-                scale: 3,
-                backgroundColor: '#fefdf7',
-                logging: false,
-                useCORS: true
-            }).then(canvas => {
-                const link = document.createElement('a');
-                link.download = 'notesy-notes.png';
-                link.href = canvas.toDataURL();
-                link.click();
-            });
-        }
-
-        function zoomIn() {
-            if (currentZoom < 1.5) {
-                currentZoom += 0.1;
-                document.getElementById('notebookPage').style.transform = `scale(${currentZoom})`;
-                document.getElementById('notebookPage').style.transformOrigin = 'top center';
-            }
-        }
-
-        function zoomOut() {
-            if (currentZoom > 0.5) {
-                currentZoom -= 0.1;
-                document.getElementById('notebookPage').style.transform = `scale(${currentZoom})`;
-                document.getElementById('notebookPage').style.transformOrigin = 'top center';
-            }
-        }
-
-        // Event listeners
-        document.getElementById('fontSize').addEventListener('input', (e) => {
-            document.getElementById('fontSizeValue').textContent = e.target.value + 'px';
-            if (document.getElementById('noteContent').value) generateNotes();
-        });
-
-        document.getElementById('lineHeight').addEventListener('input', (e) => {
-            document.getElementById('lineHeightValue').textContent = e.target.value;
-            if (document.getElementById('noteContent').value) generateNotes();
-        });
-
-        document.getElementById('fontSelect').addEventListener('change', generateNotes);
-        document.getElementById('penColor').addEventListener('change', generateNotes);
-        document.getElementById('addDoodles').addEventListener('change', generateNotes);
-        document.getElementById('addSticky').addEventListener('change', generateNotes);
-        document.getElementById('hindiMode').addEventListener('change', generateNotes);
-        document.getElementById('addMargin').addEventListener('change', generateNotes);
-
-        // Auto-generate on input with debounce
-        let debounceTimer;
-        document.getElementById('noteContent').addEventListener('input', () => {
-            clearTimeout(debounceTimer);
-            debounceTimer = setTimeout(generateNotes, 500);
-        });
-    </script>
+      }, 1000);
+    }
+    
+    document.querySelector('.btn').addEventListener('click', function(e) {
+      e.preventDefault();
+      document.querySelector('#about').scrollIntoView({ 
+        behavior: 'smooth' 
+      });
+    });
+  </script>
 </body>
 </html>
